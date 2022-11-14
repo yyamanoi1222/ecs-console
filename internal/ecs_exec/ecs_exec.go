@@ -3,6 +3,7 @@ package ecs_exec
 import (
   "os/exec"
   "os"
+  "log"
 )
 
 type Config struct {
@@ -12,7 +13,7 @@ type Config struct {
   Command string
 }
 
-func Start(c Config) {
+func Start(c Config) error {
   cmd := exec.Command(
     "aws",
     "ecs",
@@ -28,9 +29,11 @@ func Start(c Config) {
     c.Command,
   )
 
+  log.Printf("executing ecs execute-command \ncommand: %s \n", cmd.String())
+
   cmd.Stdin = os.Stdin
   cmd.Stdout = os.Stdout
   cmd.Stderr = os.Stderr
 
-  cmd.Run()
+  return cmd.Run()
 }
