@@ -3,13 +3,15 @@ package runner
 import (
   "github.com/yyamanoi1222/ecs_console/internal/ecs"
   "github.com/yyamanoi1222/ecs_console/internal/ecs_exec"
+  "github.com/yyamanoi1222/ecs_console/internal/ssm"
   "time"
   "os"
   "os/signal"
   "syscall"
+  "strings"
 )
 
-type Config struct {
+type ExecConfig struct {
   ClusterName string
   TaskDefinition string
   Command string
@@ -18,7 +20,17 @@ type Config struct {
   SecurityGroups string
 }
 
-func Run(c *Config) error {
+type PortforwardConfig struct {
+  ClusterName string
+  TaskDefinition string
+  Container string
+  Subnets string
+  SecurityGroups string
+  LocalPort string
+  RemotePort string
+}
+
+func Exec(c *ExecConfig) error {
   taskArn := ""
 
   go func() {
@@ -37,7 +49,7 @@ func Run(c *Config) error {
   }()
 
   // Create ECS Task
-  taskArn, err := ecs.RunEcsTask(ecs.CreateTaskConfig{
+  task, err := ecs.RunEcsTask(ecs.CreateTaskConfig{
     TaskDefinition: c.TaskDefinition,
     ClusterName: c.ClusterName,
     Subnets: c.Subnets,
@@ -46,6 +58,7 @@ func Run(c *Config) error {
   if err != nil {
     return err
   }
+  taskArn = *task.TaskArn
 
   time.Sleep(time.Second * 20)
 
@@ -55,6 +68,68 @@ func Run(c *Config) error {
     Container: c.Container,
     TaskArn: taskArn,
     Command: c.Command,
+  })
+
+  if err != nil {
+    return err
+  }
+
+  // Stop ECS Task
+  err = ecs.StopEcsTask(ecs.StopTaskConfig{
+    ClusterName: c.ClusterName,
+    TaskArn: taskArn,
+  })
+
+  return err
+}
+
+func Portforward(c *PortforwardConfig) error {
+  taskArn := ""
+
+  go func() {
+    sig := make(chan os.Signal, 1)
+    signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTSTP)
+
+    _ = <-sig
+
+    if len(taskArn) > 0 {
+      ecs.StopEcsTask(ecs.StopTaskConfig{
+        ClusterName: c.ClusterName,
+        TaskArn: taskArn,
+      })
+    }
+    os.Exit(1)
+  }()
+
+  // Create ECS Task
+  task, err := ecs.RunEcsTask(ecs.CreateTaskConfig{
+    TaskDefinition: c.TaskDefinition,
+    ClusterName: c.ClusterName,
+    Subnets: c.Subnets,
+    SecurityGroups: c.SecurityGroups,
+  })
+  if err != nil {
+    return err
+  }
+  taskArn = *task.TaskArn
+
+  time.Sleep(time.Second * 20)
+
+  spTaskArn := strings.Split(taskArn, "/")
+  taskId := spTaskArn[len(spTaskArn) - 1]
+
+  containerId, err := ecs.GetContainerId(c.ClusterName, taskId, c.Container)
+  if err != nil {
+    return err
+  }
+
+  // Run Portforward
+  err = ssm.StartPortforward(ssm.Config{
+    ClusterName: c.ClusterName,
+    ContainerId: containerId,
+    LocalPort: c.LocalPort,
+    RemotePort: c.RemotePort,
+    TaskId: taskId,
   })
 
   if err != nil {

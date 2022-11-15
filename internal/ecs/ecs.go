@@ -19,7 +19,7 @@ type StopTaskConfig struct {
   ClusterName string
 }
 
-func RunEcsTask(c CreateTaskConfig) (taskArn string, err error) {
+func RunEcsTask(c CreateTaskConfig) (*aecs.Task, error) {
   sess := session.Must(session.NewSessionWithOptions(session.Options{SharedConfigState: session.SharedConfigEnable}))
   ecs := aecs.New(sess)
 
@@ -39,10 +39,11 @@ func RunEcsTask(c CreateTaskConfig) (taskArn string, err error) {
   })
 
   if err != nil {
-    return "", err
+    return &aecs.Task{}, err
   }
 
-  taskArn = *o.Tasks[0].TaskArn
+  task := o.Tasks[0]
+  taskArn := *task.TaskArn
 
   log.Printf("waiting for running task %s", taskArn)
   err = ecs.WaitUntilTasksRunning(&aecs.DescribeTasksInput{
@@ -52,7 +53,7 @@ func RunEcsTask(c CreateTaskConfig) (taskArn string, err error) {
     },
   })
 
-  return taskArn, err
+  return task, err
 }
 
 func StopEcsTask(c StopTaskConfig) error {
@@ -65,4 +66,27 @@ func StopEcsTask(c StopTaskConfig) error {
     Task: aws.String(c.TaskArn),
   })
   return err
+}
+
+func GetContainerId(clusterName string, taskId string, containerName string) (string, error) {
+  sess := session.Must(session.NewSessionWithOptions(session.Options{SharedConfigState: session.SharedConfigEnable}))
+  ecs := aecs.New(sess)
+  res, err := ecs.DescribeTasks(&aecs.DescribeTasksInput{
+    Cluster: aws.String(clusterName),
+    Tasks: []*string{aws.String(taskId)},
+  })
+
+  if err != nil {
+    return "", err
+  }
+
+  task := res.Tasks[0]
+  container := task.Containers[0]
+  for _, cc := range task.Containers {
+    if *cc.Name == containerName {
+      container = cc
+    }
+  }
+
+  return *container.RuntimeId, nil
 }

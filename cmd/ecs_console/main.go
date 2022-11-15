@@ -14,7 +14,7 @@ func main() {
       {
         Name: "exec",
         Action: func(cCtx *cli.Context) error {
-          err := runner.Run(&runner.Config{
+          err := runner.Exec(&runner.ExecConfig{
             ClusterName: cCtx.String("cluster"),
             TaskDefinition: cCtx.String("task-def"),
             Command: cCtx.String("command"),
@@ -53,6 +53,55 @@ func main() {
           &cli.StringFlag{
             Name: "security-groups",
             Usage: "sg for task",
+          },
+        },
+      },
+      {
+        Name: "portforward",
+        Action: func(cCtx *cli.Context) error {
+          err := runner.Portforward(&runner.PortforwardConfig{
+            ClusterName: cCtx.String("cluster"),
+            TaskDefinition: cCtx.String("task-def"),
+            Container: cCtx.String("container"),
+            Subnets: cCtx.String("subnets"),
+            SecurityGroups: cCtx.String("security-groups"),
+            LocalPort: cCtx.String("local-port"),
+            RemotePort: cCtx.String("remote-port"),
+          })
+          if err != nil {
+            log.Fatal(err)
+          }
+          return err
+        },
+        Flags: []cli.Flag{
+          &cli.StringFlag{
+            Name: "cluster",
+            Usage: "ECS Cluster Name",
+          },
+          &cli.StringFlag{
+            Name: "task-def",
+            Usage: "ECS Taskdefinition arn",
+          },
+          &cli.StringFlag{
+            Name: "container",
+            Value: "app",
+            Usage: "container name for ecs-exec",
+          },
+          &cli.StringFlag{
+            Name: "subnets",
+            Usage: "subnets name for task",
+          },
+          &cli.StringFlag{
+            Name: "security-groups",
+            Usage: "sg for task",
+          },
+          &cli.StringFlag{
+            Name: "remote-port",
+            Usage: "remote port",
+          },
+          &cli.StringFlag{
+            Name: "local-port",
+            Usage: "local port",
           },
         },
       },
