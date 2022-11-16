@@ -8,7 +8,7 @@ This tool hides the start-stop process, so developers can start shells and perfo
 # Install
 
 ```
-$ go install github.com/yyamanoi1222/ecs-console@latest
+$ go install github.com/yyamanoi1222/ecs-console/cmd/ecs-console@latest
 ```
 
 # Usage
