@@ -1,4 +1,4 @@
-module github.com/yyamanoi1222/ecs_console
+module github.com/yyamanoi1222/ecs-console
 
 go 1.18
 
