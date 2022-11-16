@@ -18,11 +18,44 @@ You can see the detailed options in the -h option
 ## Execute shell
 
 ```
-$ ecs-console exec --cluster <cluster-name> --task-def <task-def> --command <execute command (default /bin/bash)> --container <container name for login> --subnets <subnet names for task placement> --security-groups <sg ids for task placement>
+$ ecs-console exec -h
+
+NAME:
+   ecs-console exec
+
+USAGE:
+   ecs-console exec [command options] [arguments...]
+
+OPTIONS:
+   --cluster value          ECS Cluster Name
+   --task-def value         ECS Taskdefinition arn
+   --command value          command passing to ecs-exec (default: "/bin/bash")
+   --container value        container name for ecs-exec (default: "app")
+   --subnets value          subnets name for task
+   --security-groups value  sg for task
+   --help, -h               show help (default: false)
+
 ```
 
 ## Execute portforward
 
 ```
-$ ecs-console portforward --cluster <cluster-name> --task-def <task-def> --container <container name for login> --subnets <subnet names for task placement> --security-groups <sg ids for task placement> --local-port <local port number> --remote-port <remote port number>
+$ ecs-console portforward -h
+
+NAME:
+   ecs-console portforward
+
+USAGE:
+   ecs-console portforward [command options] [arguments...]
+
+OPTIONS:
+   --cluster value          ECS Cluster Name
+   --task-def value         ECS Taskdefinition arn
+   --container value        container name for ecs-exec (default: "app")
+   --subnets value          subnets name for task
+   --security-groups value  sg for task
+   --remote-port value      remote port
+   --local-port value       local port
+   --help, -h               show help (default: false)
+
 ```
