@@ -4,6 +4,7 @@ import (
   "github.com/yyamanoi1222/ecs_console/internal/ecs"
   "github.com/yyamanoi1222/ecs_console/internal/ecs_exec"
   "github.com/yyamanoi1222/ecs_console/internal/ssm"
+  "github.com/avast/retry-go/v4"
   "time"
   "os"
   "os/signal"
@@ -60,26 +61,36 @@ func Exec(c *ExecConfig) error {
   }
   taskArn = *task.TaskArn
 
-  time.Sleep(time.Second * 20)
-
   // Run ECS Exec
-  err = ecs_exec.Start(ecs_exec.Config{
-    ClusterName: c.ClusterName,
-    Container: c.Container,
-    TaskArn: taskArn,
-    Command: c.Command,
-  })
+  err = retry.Do(
+    func() error {
+      return ecs_exec.Start(ecs_exec.Config{
+        ClusterName: c.ClusterName,
+        Container: c.Container,
+        TaskArn: taskArn,
+        Command: c.Command,
+      })
+    },
+    retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
+      return retry.BackOffDelay(n, err, config)
+    }),
+    retry.Delay(time.Second),
+  )
 
   if err != nil {
     return err
   }
 
-  // Stop ECS Task
-  err = ecs.StopEcsTask(ecs.StopTaskConfig{
-    ClusterName: c.ClusterName,
-    TaskArn: taskArn,
-  })
-
+  defer func() {
+    // Stop ECS Task
+    if len(taskArn) > 0 {
+      err = ecs.StopEcsTask(ecs.StopTaskConfig{
+        ClusterName: c.ClusterName,
+        TaskArn: taskArn,
+      })
+    }
+    return
+  }()
   return err
 }
 
@@ -124,23 +135,37 @@ func Portforward(c *PortforwardConfig) error {
   }
 
   // Run Portforward
-  err = ssm.StartPortforward(ssm.Config{
-    ClusterName: c.ClusterName,
-    ContainerId: containerId,
-    LocalPort: c.LocalPort,
-    RemotePort: c.RemotePort,
-    TaskId: taskId,
-  })
+  err = retry.Do(
+    func() error {
+      return ssm.StartPortforward(ssm.Config{
+        ClusterName: c.ClusterName,
+        ContainerId: containerId,
+        LocalPort: c.LocalPort,
+        RemotePort: c.RemotePort,
+        TaskId: taskId,
+      })
+      gs
+    },
+    retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
+      return retry.BackOffDelay(n, err, config)
+    }),
+    retry.Delay(time.Second),
+  )
 
   if err != nil {
     return err
   }
 
-  // Stop ECS Task
-  err = ecs.StopEcsTask(ecs.StopTaskConfig{
-    ClusterName: c.ClusterName,
-    TaskArn: taskArn,
-  })
+  defer func() {
+    // Stop ECS Task
+    if len(taskArn) > 0 {
+      err = ecs.StopEcsTask(ecs.StopTaskConfig{
+        ClusterName: c.ClusterName,
+        TaskArn: taskArn,
+      })
+    }
+    return
+  }()
 
   return err
 }
