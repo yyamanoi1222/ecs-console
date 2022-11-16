@@ -9,7 +9,7 @@ import (
 
 func main() {
   app := &cli.App{
-    Name: "ecs_console",
+    Name: "ecs-console",
     Commands: []*cli.Command{
       {
         Name: "exec",
