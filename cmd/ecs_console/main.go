@@ -3,7 +3,7 @@ package main
 import (
   "github.com/urfave/cli/v2"
   "os"
-  "github.com/yyamanoi1222/ecs_console/internal/runner"
+  "github.com/yyamanoi1222/ecs-console/internal/runner"
   "log"
 )
 

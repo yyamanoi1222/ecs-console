@@ -1,7 +1,7 @@
 package ssm
 
 import (
-  "github.com/yyamanoi1222/ecs_console/internal/ecs_exec"
+  "github.com/yyamanoi1222/ecs-console/internal/ecs_exec"
   "os/exec"
   "os"
   "fmt"

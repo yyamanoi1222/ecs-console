@@ -1,9 +1,9 @@
 package runner
 
 import (
-  "github.com/yyamanoi1222/ecs_console/internal/ecs"
-  "github.com/yyamanoi1222/ecs_console/internal/ecs_exec"
-  "github.com/yyamanoi1222/ecs_console/internal/ssm"
+  "github.com/yyamanoi1222/ecs-console/internal/ecs"
+  "github.com/yyamanoi1222/ecs-console/internal/ecs_exec"
+  "github.com/yyamanoi1222/ecs-console/internal/ssm"
   "time"
   "os"
   "os/signal"
