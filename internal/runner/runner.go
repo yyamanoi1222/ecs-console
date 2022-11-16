@@ -4,7 +4,6 @@ import (
   "github.com/yyamanoi1222/ecs_console/internal/ecs"
   "github.com/yyamanoi1222/ecs_console/internal/ecs_exec"
   "github.com/yyamanoi1222/ecs_console/internal/ssm"
-  "github.com/avast/retry-go/v4"
   "time"
   "os"
   "os/signal"
@@ -31,8 +30,19 @@ type PortforwardConfig struct {
   RemotePort string
 }
 
-func Exec(c *ExecConfig) error {
+func Exec(c *ExecConfig) (err error) {
   taskArn := ""
+
+  defer func() {
+    // Stop ECS Task
+    if len(taskArn) > 0 {
+      ecs.StopEcsTask(ecs.StopTaskConfig{
+        ClusterName: c.ClusterName,
+        TaskArn: taskArn,
+      })
+    }
+    return
+  }()
 
   go func() {
     sig := make(chan os.Signal, 1)
@@ -62,40 +72,34 @@ func Exec(c *ExecConfig) error {
   taskArn = *task.TaskArn
 
   // Run ECS Exec
-  err = retry.Do(
-    func() error {
-      return ecs_exec.Start(ecs_exec.Config{
-        ClusterName: c.ClusterName,
-        Container: c.Container,
-        TaskArn: taskArn,
-        Command: c.Command,
-      })
-    },
-    retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
-      return retry.BackOffDelay(n, err, config)
-    }),
-    retry.Delay(time.Second),
-  )
+  err = ecs_exec.Start(ecs_exec.Config{
+    ClusterName: c.ClusterName,
+    Container: c.Container,
+    TaskArn: taskArn,
+    Command: c.Command,
+  })
 
   if err != nil {
     return err
   }
 
+  return err
+}
+
+func Portforward(c *PortforwardConfig) (err error) {
+  taskArn := ""
+
   defer func() {
     // Stop ECS Task
     if len(taskArn) > 0 {
-      err = ecs.StopEcsTask(ecs.StopTaskConfig{
+      ecs.StopEcsTask(ecs.StopTaskConfig{
         ClusterName: c.ClusterName,
         TaskArn: taskArn,
       })
     }
     return
   }()
-  return err
-}
 
-func Portforward(c *PortforwardConfig) error {
-  taskArn := ""
 
   go func() {
     sig := make(chan os.Signal, 1)
@@ -135,37 +139,17 @@ func Portforward(c *PortforwardConfig) error {
   }
 
   // Run Portforward
-  err = retry.Do(
-    func() error {
-      return ssm.StartPortforward(ssm.Config{
-        ClusterName: c.ClusterName,
-        ContainerId: containerId,
-        LocalPort: c.LocalPort,
-        RemotePort: c.RemotePort,
-        TaskId: taskId,
-      })
-      gs
-    },
-    retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
-      return retry.BackOffDelay(n, err, config)
-    }),
-    retry.Delay(time.Second),
-  )
+  err = ssm.StartPortforward(ssm.Config{
+    ClusterName: c.ClusterName,
+    ContainerId: containerId,
+    Container: c.Container,
+    LocalPort: c.LocalPort,
+    RemotePort: c.RemotePort,
+    TaskId: taskId,
+  })
 
   if err != nil {
     return err
   }
-
-  defer func() {
-    // Stop ECS Task
-    if len(taskArn) > 0 {
-      err = ecs.StopEcsTask(ecs.StopTaskConfig{
-        ClusterName: c.ClusterName,
-        TaskArn: taskArn,
-      })
-    }
-    return
-  }()
-
   return err
 }

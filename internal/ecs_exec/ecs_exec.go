@@ -4,6 +4,8 @@ import (
   "os/exec"
   "os"
   "log"
+  "github.com/avast/retry-go/v4"
+  "time"
 )
 
 type Config struct {
@@ -14,6 +16,11 @@ type Config struct {
 }
 
 func Start(c Config) error {
+  err := CheckAgentRunning(c)
+  if err != nil {
+    return err
+  }
+
   cmd := exec.Command(
     "aws",
     "ecs",
@@ -36,4 +43,30 @@ func Start(c Config) error {
   cmd.Stderr = os.Stderr
 
   return cmd.Run()
+}
+
+func CheckAgentRunning(c Config) error {
+  return retry.Do(
+    func() error {
+      cmd := exec.Command(
+        "aws",
+        "ecs",
+        "execute-command",
+        "--cluster",
+        c.ClusterName,
+        "--task",
+        c.TaskArn,
+        "--container",
+        c.Container,
+        "--interactive",
+        "--command",
+        "echo ok",
+      )
+      return cmd.Run()
+    },
+    retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
+      return retry.BackOffDelay(n, err, config)
+    }),
+    retry.Delay(time.Second),
+  )
 }

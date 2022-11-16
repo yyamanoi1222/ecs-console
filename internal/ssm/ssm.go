@@ -1,6 +1,7 @@
 package ssm
 
 import (
+  "github.com/yyamanoi1222/ecs_console/internal/ecs_exec"
   "os/exec"
   "os"
   "fmt"
@@ -11,11 +12,21 @@ type Config struct {
   ClusterName string
   TaskId string
   ContainerId string
+  Container string
   LocalPort string
   RemotePort string
 }
 
 func StartPortforward(c Config) error {
+  err := ecs_exec.CheckAgentRunning(ecs_exec.Config{
+    ClusterName: c.ClusterName,
+    Container: c.Container,
+    TaskArn: c.TaskId,
+  })
+  if err != nil {
+    return err
+  }
+
   target := fmt.Sprintf("ecs:%s_%s_%s", c.ClusterName, c.TaskId, c.ContainerId)
   parameters := fmt.Sprintf(`{"portNumber":["%s"],"localPortNumber":["%s"]}`, c.RemotePort, c.LocalPort)
 
