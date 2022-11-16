@@ -2,7 +2,7 @@
 ecs-console is a tool for launching one-time tasks and running shells and portforwarding on ECS
 
 # Motivation
-When using a CLI tool such as Ralis console in a production environment, there is a need to start and stop a one-time ECS task each time.
+When using a CLI tool such as Ralis console in a production environment, there is a need to start and stop a one-time ECS task each time.  
 This tool hides the start-stop process, so developers can start shells and perform port forwarding without being aware of the task start-stop process.
 
 # Install
