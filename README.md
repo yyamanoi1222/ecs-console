@@ -1,5 +1,5 @@
 # ecs-console
-ecs-console is a tool for launching one-time tasks and running shells and portforwarding on ECS
+ecs-console is a tool for launching one-time ECS tasks and running ecs-exec or portforwarding on ECS
 
 # Motivation
 When using a CLI tool such as Ralis console in a production environment, there is a need to start and stop a one-time ECS task each time.  
