@@ -53,7 +53,7 @@ VERSION:
           },
           &cli.StringFlag{
             Name: "task-def",
-            Usage: "ECS Taskdefinition arn",
+            Usage: "ECS Taskdefinition name (ex. hoge:latest)",
             Required: true,
           },
           &cli.StringFlag{
@@ -69,12 +69,12 @@ VERSION:
           },
           &cli.StringFlag{
             Name: "subnets",
-            Usage: "subnets name for task",
+            Usage: "subnets name for task placement",
             Required: true,
           },
           &cli.StringFlag{
             Name: "security-groups",
-            Usage: "sg for task",
+            Usage: "sg for task placement",
             Required: true,
           },
         },
@@ -104,7 +104,7 @@ VERSION:
           },
           &cli.StringFlag{
             Name: "task-def",
-            Usage: "ECS Taskdefinition arn",
+            Usage: "ECS Taskdefinition name (ex. hoge:latest)",
             Required: true,
           },
           &cli.StringFlag{
@@ -115,12 +115,12 @@ VERSION:
           },
           &cli.StringFlag{
             Name: "subnets",
-            Usage: "subnets name for task",
+            Usage: "subnets name for task placement",
             Required: true,
           },
           &cli.StringFlag{
             Name: "security-groups",
-            Usage: "sg for task",
+            Usage: "sg for task placement",
             Required: true,
           },
           &cli.StringFlag{
