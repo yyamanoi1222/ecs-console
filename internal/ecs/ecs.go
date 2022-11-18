@@ -1,30 +1,35 @@
 package ecs
 
 import (
-  "github.com/aws/aws-sdk-go/aws/session"
   "github.com/aws/aws-sdk-go/aws"
   aecs "github.com/aws/aws-sdk-go/service/ecs"
   "strings"
   "log"
 )
 
+type EcsClient interface {
+  RunTask(i *aecs.RunTaskInput) (*aecs.RunTaskOutput, error)
+  StopTask(i *aecs.StopTaskInput) (*aecs.StopTaskOutput, error)
+  WaitUntilTasksRunning(i *aecs.DescribeTasksInput) error
+  DescribeTasks(i *aecs.DescribeTasksInput) (*aecs.DescribeTasksOutput, error)
+}
+
 type CreateTaskConfig struct {
+  Client EcsClient
   TaskDefinition string
   ClusterName string
   Subnets string
   SecurityGroups string
 }
 type StopTaskConfig struct {
+  Client EcsClient
   TaskArn string
   ClusterName string
 }
 
 func RunEcsTask(c CreateTaskConfig) (*aecs.Task, error) {
-  sess := session.Must(session.NewSessionWithOptions(session.Options{SharedConfigState: session.SharedConfigEnable}))
-  ecs := aecs.New(sess)
-
   log.Printf("executing run-task")
-  o, err := ecs.RunTask(&aecs.RunTaskInput{
+  o, err := c.Client.RunTask(&aecs.RunTaskInput{
     LaunchType: aws.String("FARGATE"),
     EnableExecuteCommand: aws.Bool(true),
     Cluster: aws.String(c.ClusterName),
@@ -46,7 +51,7 @@ func RunEcsTask(c CreateTaskConfig) (*aecs.Task, error) {
   taskArn := *task.TaskArn
 
   log.Printf("waiting for running task %s", taskArn)
-  err = ecs.WaitUntilTasksRunning(&aecs.DescribeTasksInput{
+  err = c.Client.WaitUntilTasksRunning(&aecs.DescribeTasksInput{
     Cluster: aws.String(c.ClusterName),
     Tasks: []*string{
       &taskArn,
@@ -57,21 +62,16 @@ func RunEcsTask(c CreateTaskConfig) (*aecs.Task, error) {
 }
 
 func StopEcsTask(c StopTaskConfig) error {
-  sess := session.Must(session.NewSessionWithOptions(session.Options{SharedConfigState: session.SharedConfigEnable}))
-  ecs := aecs.New(sess)
-
   log.Printf("executing stop-task %s", c.TaskArn)
-  _, err := ecs.StopTask(&aecs.StopTaskInput{
+  _, err := c.Client.StopTask(&aecs.StopTaskInput{
     Cluster: aws.String(c.ClusterName),
     Task: aws.String(c.TaskArn),
   })
   return err
 }
 
-func GetContainerId(clusterName string, taskId string, containerName string) (string, error) {
-  sess := session.Must(session.NewSessionWithOptions(session.Options{SharedConfigState: session.SharedConfigEnable}))
-  ecs := aecs.New(sess)
-  res, err := ecs.DescribeTasks(&aecs.DescribeTasksInput{
+func GetContainerId(client EcsClient, clusterName string, taskId string, containerName string) (string, error) {
+  res, err := client.DescribeTasks(&aecs.DescribeTasksInput{
     Cluster: aws.String(clusterName),
     Tasks: []*string{aws.String(taskId)},
   })

@@ -1,6 +1,8 @@
 package runner
 
 import (
+  "github.com/aws/aws-sdk-go/aws/session"
+  aecs "github.com/aws/aws-sdk-go/service/ecs"
   "github.com/yyamanoi1222/ecs-console/internal/ecs"
   "github.com/yyamanoi1222/ecs-console/internal/ecs_exec"
   "github.com/yyamanoi1222/ecs-console/internal/ssm"
@@ -31,12 +33,16 @@ type PortforwardConfig struct {
 }
 
 func Exec(c *ExecConfig) (err error) {
+  sess := session.Must(session.NewSessionWithOptions(session.Options{SharedConfigState: session.SharedConfigEnable}))
+  ecsClient := aecs.New(sess)
+
   taskArn := ""
 
   defer func() {
     // Stop ECS Task
     if len(taskArn) > 0 {
       ecs.StopEcsTask(ecs.StopTaskConfig{
+        Client: ecsClient,
         ClusterName: c.ClusterName,
         TaskArn: taskArn,
       })
@@ -52,6 +58,7 @@ func Exec(c *ExecConfig) (err error) {
 
     if len(taskArn) > 0 {
       ecs.StopEcsTask(ecs.StopTaskConfig{
+        Client: ecsClient,
         ClusterName: c.ClusterName,
         TaskArn: taskArn,
       })
@@ -61,6 +68,7 @@ func Exec(c *ExecConfig) (err error) {
 
   // Create ECS Task
   task, err := ecs.RunEcsTask(ecs.CreateTaskConfig{
+    Client: ecsClient,
     TaskDefinition: c.TaskDefinition,
     ClusterName: c.ClusterName,
     Subnets: c.Subnets,
@@ -87,12 +95,15 @@ func Exec(c *ExecConfig) (err error) {
 }
 
 func Portforward(c *PortforwardConfig) (err error) {
+  sess := session.Must(session.NewSessionWithOptions(session.Options{SharedConfigState: session.SharedConfigEnable}))
+  ecsClient := aecs.New(sess)
   taskArn := ""
 
   defer func() {
     // Stop ECS Task
     if len(taskArn) > 0 {
       ecs.StopEcsTask(ecs.StopTaskConfig{
+        Client: ecsClient,
         ClusterName: c.ClusterName,
         TaskArn: taskArn,
       })
@@ -109,6 +120,7 @@ func Portforward(c *PortforwardConfig) (err error) {
 
     if len(taskArn) > 0 {
       ecs.StopEcsTask(ecs.StopTaskConfig{
+        Client: ecsClient,
         ClusterName: c.ClusterName,
         TaskArn: taskArn,
       })
@@ -133,7 +145,7 @@ func Portforward(c *PortforwardConfig) (err error) {
   spTaskArn := strings.Split(taskArn, "/")
   taskId := spTaskArn[len(spTaskArn) - 1]
 
-  containerId, err := ecs.GetContainerId(c.ClusterName, taskId, c.Container)
+  containerId, err := ecs.GetContainerId(ecsClient, c.ClusterName, taskId, c.Container)
   if err != nil {
     return err
   }
