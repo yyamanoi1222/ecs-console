@@ -17,8 +17,14 @@ type Config struct {
   RemotePort string
 }
 
+type CommandRunner struct {}
+func (c CommandRunner) Command(name string, arg ...string) *exec.Cmd {
+  return exec.Command(name, arg...)
+}
+
 func StartPortforward(c Config) error {
   err := ecs_exec.CheckAgentRunning(ecs_exec.Config{
+    Runner: CommandRunner{},
     ClusterName: c.ClusterName,
     Container: c.Container,
     TaskArn: c.TaskId,

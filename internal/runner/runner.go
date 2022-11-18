@@ -6,6 +6,7 @@ import (
   "github.com/yyamanoi1222/ecs-console/internal/ecs"
   "github.com/yyamanoi1222/ecs-console/internal/ecs_exec"
   "github.com/yyamanoi1222/ecs-console/internal/ssm"
+  "os/exec"
   "time"
   "os"
   "os/signal"
@@ -30,6 +31,11 @@ type PortforwardConfig struct {
   SecurityGroups string
   LocalPort string
   RemotePort string
+}
+
+type CommandRunner struct {}
+func (c CommandRunner) Command(name string, arg ...string) *exec.Cmd {
+  return exec.Command(name, arg...)
 }
 
 func Exec(c *ExecConfig) (err error) {
@@ -81,6 +87,7 @@ func Exec(c *ExecConfig) (err error) {
 
   // Run ECS Exec
   err = ecs_exec.Start(ecs_exec.Config{
+    Runner: CommandRunner{},
     ClusterName: c.ClusterName,
     Container: c.Container,
     TaskArn: taskArn,

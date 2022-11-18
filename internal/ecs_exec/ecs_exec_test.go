@@ -4,8 +4,6 @@ import (
   "testing"
 )
 
-func TestStart(t *testing.T) {
-}
+func TestStart(t *testing.T) {}
 
-func TestCheckAgentRunning(t *testing.T) {
-}
+func TestCheckAgentRunning(t *testing.T) {}

@@ -8,7 +8,12 @@ import (
   "time"
 )
 
+type Runner interface {
+  Command(name string, arg ...string) *exec.Cmd
+}
+
 type Config struct {
+  Runner Runner
   ClusterName string
   Container string
   TaskArn string
@@ -21,7 +26,7 @@ func Start(c Config) error {
     return err
   }
 
-  cmd := exec.Command(
+  cmd := c.Runner.Command(
     "aws",
     "ecs",
     "execute-command",
@@ -48,7 +53,7 @@ func Start(c Config) error {
 func CheckAgentRunning(c Config) error {
   return retry.Do(
     func() error {
-      cmd := exec.Command(
+      cmd := c.Runner.Command(
         "aws",
         "ecs",
         "execute-command",
