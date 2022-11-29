@@ -7,9 +7,14 @@ This tool hides the start-stop process, so developers can start shells and perfo
 
 # Install
 
+### Using Go
 ```
 $ go install github.com/yyamanoi1222/ecs-console/cmd/ecs-console@latest
 ```
+
+### From release
+https://github.com/yyamanoi1222/ecs-console/releases  
+Download the appropriate binary
 
 # Usage
 
