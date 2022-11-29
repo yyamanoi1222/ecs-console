@@ -27,7 +27,7 @@ VERSION:
 `
   app := &cli.App{
     Name: "ecs-console",
-    Version:  "v0.0.0",
+    Version:  "v0.0.1",
     Commands: []*cli.Command{
       {
         Name: "exec",
