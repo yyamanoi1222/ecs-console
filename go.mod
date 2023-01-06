@@ -3,9 +3,9 @@ module github.com/yyamanoi1222/ecs-console
 go 1.18
 
 require (
-	github.com/avast/retry-go/v4 v4.3.1
-	github.com/aws/aws-sdk-go v1.44.136
-	github.com/urfave/cli/v2 v2.23.5
+	github.com/avast/retry-go/v4 v4.3.2
+	github.com/aws/aws-sdk-go v1.44.174
+	github.com/urfave/cli/v2 v2.23.7
 )
 
 require (
