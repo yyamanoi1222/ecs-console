@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/avast/retry-go/v4 v4.3.2
-	github.com/aws/aws-sdk-go v1.44.174
-	github.com/urfave/cli/v2 v2.23.7
+	github.com/aws/aws-sdk-go v1.44.188
+	github.com/urfave/cli/v2 v2.24.1
 )
 
 require (
